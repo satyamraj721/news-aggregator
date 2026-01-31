@@ -1,0 +1,17 @@
+.navbar {
+  background: #0f172a;
+  padding: 14px 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.brand img {
+  height: 42px;
+}
