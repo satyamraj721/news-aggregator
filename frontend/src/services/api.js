@@ -1,27 +1,39 @@
 import axios from "axios";
 
-// VITE_API_URL = http://localhost:5000 (server domain only)
-const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+/*
+  LOCAL:
+    VITE_API_URL=http://localhost:5000
+
+  PRODUCTION (Vercel):
+    VITE_API_URL=https://news-aggregator-ug2i.onrender.com
+*/
+
+// 🔥 Never rely on localhost in production
+const SERVER_URL =
+  import.meta.env.VITE_API_URL ??
+  "https://news-aggregator-ug2i.onrender.com";
+
 const API_BASE_URL = `${SERVER_URL}/api/news`;
 
 console.log("🚀 Frontend initialized");
 console.log("📡 Server URL:", SERVER_URL);
 console.log("📡 API Base URL:", API_BASE_URL);
 
-// Create axios instance with correct baseURL
+// Axios instance
 const API = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
 });
 
-// Request interceptor - log outgoing requests
+// 📤 Log outgoing requests
 API.interceptors.request.use((config) => {
-  const fullURL = `${API_BASE_URL}${config.url}`;
-  console.log(`📤 ${config.method.toUpperCase()} ${fullURL}`);
+  console.log(
+    `📤 ${config.method?.toUpperCase()} ${API_BASE_URL}${config.url}`
+  );
   return config;
 });
 
-// Response interceptor with detailed error logging
+// 📥 Handle responses & errors
 API.interceptors.response.use(
   (response) => {
     console.log(`✅ Response received (${response.status})`);
@@ -29,20 +41,20 @@ API.interceptors.response.use(
   },
   (error) => {
     if (error.code === "ECONNABORTED") {
-      console.error("⏱️ Request timeout - backend is slow or unresponsive");
+      console.error("⏱️ Request timeout");
     } else if (error.code === "ERR_NETWORK") {
       console.error(
-        "🔴 ERR_NETWORK: Cannot reach backend.",
-        `Ensure server is running at: ${SERVER_URL}`
+        "🔴 Cannot reach backend.",
+        `Check server: ${SERVER_URL}`
       );
     } else if (!error.response) {
       console.error(
-        "🔴 No response from server.",
-        `Check if backend is running at: ${SERVER_URL}`
+        "🔴 No response from backend.",
+        `Check server: ${SERVER_URL}`
       );
-    } else if (error.response?.status >= 400) {
+    } else {
       console.error(
-        `🔴 Backend error (HTTP ${error.response.status}):`,
+        `🔴 Backend error (${error.response.status})`,
         error.response.data
       );
     }
@@ -50,31 +62,31 @@ API.interceptors.response.use(
   }
 );
 
-// Health check to verify backend is reachable
-export const checkHealth = () => {
-  console.log("🏥 Checking backend health...");
-  return axios.get(`${SERVER_URL}/health`, { timeout: 5000 })
-    .then((res) => {
-      console.log("✅ Backend is healthy:", res.data);
-      return true;
-    })
-    .catch((err) => {
-      console.error("❌ Backend health check failed:", err.message);
-      return false;
-    });
+// 🏥 Health check
+export const checkHealth = async () => {
+  try {
+    const res = await axios.get(`${SERVER_URL}/health`, { timeout: 5000 });
+    console.log("✅ Backend healthy:", res.data);
+    return true;
+  } catch (err) {
+    console.error("❌ Backend health check failed");
+    return false;
+  }
 };
 
-// GET /api/news/top
+// 📰 Top headlines
 export const fetchTopNews = () => {
   return API.get("/top");
 };
 
-// GET /api/news/category/:category
+// 🗂️ Category news
 export const fetchCategoryNews = (category) => {
   return API.get(`/category/${category}`);
 };
 
-// GET /api/news/search?q=query
+// 🔍 Search news
 export const searchNews = (query) => {
-  return API.get("/search", { params: { q: query } });
+  return API.get("/search", {
+    params: { q: query },
+  });
 };
