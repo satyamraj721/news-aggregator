@@ -7,16 +7,18 @@ const newsRoutes = require("./routes/newsRoutes");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Detailed CORS configuration
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
-}));
+// ✅ CORS (allow frontend + Render)
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
 
 app.use(express.json());
 
-// Request logging middleware
+// 🔍 Request logger (helps debugging)
 app.use((req, res, next) => {
   console.log(`📨 ${req.method} ${req.path}`);
   next();
@@ -25,21 +27,22 @@ app.use((req, res, next) => {
 // ✅ API ROUTES
 app.use("/api/news", newsRoutes);
 
-// Health check endpoint (accessible at http://localhost:5000/health)
+// ✅ Health check
 app.get("/health", (req, res) => {
-  console.log("✅ Health check requested");
-  res.json({ status: "OK", timestamp: new Date().toISOString() });
+  res.json({
+    status: "OK",
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// 404 handler
+// ❌ 404 handler
 app.use((req, res) => {
-  console.log(`❌ 404 - Route not found: ${req.path}`);
   res.status(404).json({ error: "Route not found" });
 });
 
-// Start server on localhost (127.0.0.1)
-app.listen(PORT, "localhost", () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`📡 API endpoints available at http://localhost:${PORT}/api/news`);
-  console.log(`🏥 Health check at http://localhost:${PORT}/health`);
+// ✅ IMPORTANT FIX FOR RENDER (0.0.0.0)
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`📡 API available at /api/news`);
+  console.log(`🏥 Health check at /health`);
 });
